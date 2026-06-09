@@ -1,0 +1,260 @@
+@base = http://localhost:5284/api
+
+### ─────────────────────────────────────────
+###  AUTH FLOW
+###  Run 1-3 (register) then 5-7 (login) first.
+###  Tokens are auto-captured via # @name.
+###  Then run any request below.
+### ─────────────────────────────────────────
+
+### 1. Register Alice
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{ "name": "Alice", "email": "alice@test.com", "password": "Pass123!" }
+
+### 2. Register Bob
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{ "name": "Bob", "email": "bob@test.com", "password": "Pass123!" }
+
+### 3. Register Charlie
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{ "name": "Charlie", "email": "charlie@test.com", "password": "Pass123!" }
+
+### 4. Duplicate email (should fail 409)
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{ "name": "Alice Clone", "email": "alice@test.com", "password": "Pass123!" }
+
+### 5. Login as Alice
+# @name loginAlice
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "alice@test.com", "password": "Pass123!" }
+
+### 6. Login as Bob
+# @name loginBob
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "bob@test.com", "password": "Pass123!" }
+
+### 7. Login as Charlie
+# @name loginCharlie
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "charlie@test.com", "password": "Pass123!" }
+
+### 8. Wrong password (should fail 401)
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "alice@test.com", "password": "WrongPassword!" }
+
+### ─────────────────────────────────────────
+###  COUPON CRUD
+### ─────────────────────────────────────────
+
+### 9. Create SAVE20 (count=5)
+POST {{base}}/coupons
+Authorization: Bearer {{loginAlice.response.body.$.token}}
+Content-Type: application/json
+
+{ "code": "SAVE20", "expirationDate": "2026-12-31T23:59:59Z", "count": 5 }
+
+### 10. Create EXPIRED (past expiration)
+POST {{base}}/coupons
+Authorization: Bearer {{loginAlice.response.body.$.token}}
+Content-Type: application/json
+
+{ "code": "EXPIRED", "expirationDate": "2025-01-01T00:00:00Z", "count": 5 }
+
+### 11. Create SINGLE (count=1)
+POST {{base}}/coupons
+Authorization: Bearer {{loginAlice.response.body.$.token}}
+Content-Type: application/json
+
+{ "code": "SINGLE", "expirationDate": "2026-12-31T23:59:59Z", "count": 1 }
+
+### 12. Count=0 (should fail 400)
+POST {{base}}/coupons
+Authorization: Bearer {{loginAlice.response.body.$.token}}
+Content-Type: application/json
+
+{ "code": "SOLDOUT", "expirationDate": "2026-12-31T23:59:59Z", "count": 0 }
+
+### 13. Duplicate code (should fail 409)
+POST {{base}}/coupons
+Authorization: Bearer {{loginAlice.response.body.$.token}}
+Content-Type: application/json
+
+{ "code": "SAVE20", "expirationDate": "2026-12-31T23:59:59Z", "count": 5 }
+
+### 14. Global pool
+GET {{base}}/coupons?page=1&pageSize=10&sortBy=code&sortDirection=asc
+
+### 15. Get by code
+GET {{base}}/coupons/SAVE20
+
+### 16. Non-existent (should fail 404)
+GET {{base}}/coupons/NONEXISTENT
+
+### 17. Alice's own coupons
+GET {{base}}/coupons/mine?page=1&pageSize=10
+Authorization: Bearer {{loginAlice.response.body.$.token}}
+
+### 18. Update SAVE20 count → 3
+PUT {{base}}/coupons/SAVE20
+Authorization: Bearer {{loginAlice.response.body.$.token}}
+Content-Type: application/json
+
+{ "count": 3 }
+
+### 19. Update with Bob's token (should fail 403)
+PUT {{base}}/coupons/SAVE20
+Authorization: Bearer {{loginBob.response.body.$.token}}
+Content-Type: application/json
+
+{ "count": 10 }
+
+### 20. Create disposable coupon
+POST {{base}}/coupons
+Authorization: Bearer {{loginAlice.response.body.$.token}}
+Content-Type: application/json
+
+{ "code": "TODELETE", "expirationDate": "2026-12-31T23:59:59Z", "count": 2 }
+
+### 21. Soft delete TODELETE
+DELETE {{base}}/coupons/TODELETE
+Authorization: Bearer {{loginAlice.response.body.$.token}}
+
+### 22. Verify TODELETE gone (should fail 404)
+GET {{base}}/coupons/TODELETE
+
+### ─────────────────────────────────────────
+###  CLAIM FLOW
+### ─────────────────────────────────────────
+
+### 23. Bob claims SAVE20 (count 3→2)
+POST {{base}}/claims/SAVE20
+Authorization: Bearer {{loginBob.response.body.$.token}}
+
+### 24. Bob claims again (should fail 409)
+POST {{base}}/claims/SAVE20
+Authorization: Bearer {{loginBob.response.body.$.token}}
+
+### 25. Alice claims own coupon (should fail 400)
+POST {{base}}/claims/SAVE20
+Authorization: Bearer {{loginAlice.response.body.$.token}}
+
+### 26. Claim expired (should fail 410)
+POST {{base}}/claims/EXPIRED
+Authorization: Bearer {{loginBob.response.body.$.token}}
+
+### 27. Non-existent (should fail 404)
+POST {{base}}/claims/NONEXISTENT
+Authorization: Bearer {{loginBob.response.body.$.token}}
+
+### 28. No auth (should fail 401)
+POST {{base}}/claims/SAVE20
+
+### ─────────────────────────────────────────
+###  CLAIM HISTORY
+### ─────────────────────────────────────────
+
+### 29. Bob's history
+GET {{base}}/claims?page=1&pageSize=10
+Authorization: Bearer {{loginBob.response.body.$.token}}
+
+### 30. Alice's history
+GET {{base}}/claims?page=1&pageSize=10
+Authorization: Bearer {{loginAlice.response.body.$.token}}
+
+### ─────────────────────────────────────────
+###  CONCURRENCY SETUP
+###  Create fresh coupons that NO ONE has claimed yet.
+### ─────────────────────────────────────────
+
+### 31. Create RACE_OVERSELL (count=3) — 5 parallel claims → 3 succeed
+POST {{base}}/coupons
+Authorization: Bearer {{loginAlice.response.body.$.token}}
+Content-Type: application/json
+
+{ "code": "RACE_OVERSELL", "expirationDate": "2026-12-31T23:59:59Z", "count": 3 }
+
+### 32. Create RACE_SPOT (count=1) — 5 parallel claims → 1 succeeds
+POST {{base}}/coupons
+Authorization: Bearer {{loginAlice.response.body.$.token}}
+Content-Type: application/json
+
+{ "code": "RACE_SPOT", "expirationDate": "2026-12-31T23:59:59Z", "count": 1 }
+
+### ─────────────────────────────────────────
+###  RACE: OVERSELL (3 spots, 5 claimants)
+###  Fire these 5 requests in PARALLEL.
+###  Expected: exactly 3 succeed (200), 2 fail (410 sold out)
+### ─────────────────────────────────────────
+
+### 33. Bob claims RACE_OVERSELL (fire with 34-37 in parallel)
+POST {{base}}/claims/RACE_OVERSELL
+Authorization: Bearer {{loginBob.response.body.$.token}}
+
+### 34. Charlie claims RACE_OVERSELL (fire with 33, 35-37 in parallel)
+POST {{base}}/claims/RACE_OVERSELL
+Authorization: Bearer {{loginCharlie.response.body.$.token}}
+
+### 35. Bob claims RACE_OVERSELL again (fire with 33-34, 36-37 in parallel)
+POST {{base}}/claims/RACE_OVERSELL
+Authorization: Bearer {{loginBob.response.body.$.token}}
+
+### 36. Charlie claims RACE_OVERSELL again (fire with 33-35, 37 in parallel)
+POST {{base}}/claims/RACE_OVERSELL
+Authorization: Bearer {{loginCharlie.response.body.$.token}}
+
+### 37. Bob claims RACE_OVERSELL 3rd time (fire with 33-36 in parallel)
+POST {{base}}/claims/RACE_OVERSELL
+Authorization: Bearer {{loginBob.response.body.$.token}}                    
+
+### ─────────────────────────────────────────
+###  RACE: SINGLE SPOT (1 spot, 5 claimants)
+###  Fire these 5 requests in PARALLEL.
+###  Expected: exactly 1 succeeds (200), 4 fail (410 or 409)
+### ─────────────────────────────────────────
+
+### 38. Bob claims RACE_SPOT (fire with 39-42 in parallel)
+POST {{base}}/claims/RACE_SPOT
+Authorization: Bearer {{loginBob.response.body.$.token}}
+
+### 39. Charlie claims RACE_SPOT (fire with 38, 40-42 in parallel)
+POST {{base}}/claims/RACE_SPOT
+Authorization: Bearer {{loginCharlie.response.body.$.token}}
+
+### 40. Bob claims RACE_SPOT again (fire with 38-39, 41-42 in parallel)
+POST {{base}}/claims/RACE_SPOT
+Authorization: Bearer {{loginBob.response.body.$.token}}
+
+### 41. Charlie claims RACE_SPOT again (fire with 38-40, 42 in parallel)
+POST {{base}}/claims/RACE_SPOT
+Authorization: Bearer {{loginCharlie.response.body.$.token}}
+
+### 42. Bob claims RACE_SPOT 3rd time (fire with 38-41 in parallel)
+POST {{base}}/claims/RACE_SPOT
+Authorization: Bearer {{loginBob.response.body.$.token}}
+
+### ─────────────────────────────────────────
+###  RACE: DUPLICATE PROTECTION
+###  Fire these 3 requests in PARALLEL.
+###  Same user (Bob), same coupon (RACE_OVERSELL, already claimed at 33).
+###  Expected: exactly 1 may succeed (if count left), rest fail (409 already claimed)
+### ─────────────────────────────────────────
+
+### 43-45. 3× parallel claim by same user on RACE_OVERSELL
+POST {{base}}/claims/RACE_OVERSELL
+Authorization: Bearer {{loginBob.response.body.$.token}}

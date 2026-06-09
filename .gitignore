@@ -1,0 +1,30 @@
+# .NET build outputs
+bin/
+obj/
+*.csproj.user
+*.csproj.Backup.*
+*.suo
+*.sln.docstates
+
+# Server logs
+*.log
+
+# Test helper files
+body.json
+test-body.json
+
+# PowerShell test scripts
+concurrency-test.ps1
+
+# Postman folder (collections, scripts, docs, results)
+postman/
+
+# AI assistant configuration
+.opencode/
+
+# Markdown documentation
+*.md
+
+# OS files
+.DS_Store
+Thumbs.db
