@@ -21,9 +21,7 @@ postman/
 
 # AI assistant configuration
 .opencode/
-
-# Markdown documentation
-*.md
+AGENTS.md
 
 # OS files
 .DS_Store
