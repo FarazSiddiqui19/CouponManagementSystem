@@ -1,6 +1,7 @@
 using CouponManagementSystem.Data;
 using CouponManagementSystem.Data.Models;
 using CouponManagementSystem.DTO;
+using CouponManagementSystem.DTO.Claim;
 using CouponManagementSystem.Entities;
 using CouponManagementSystem.Models;
 using CouponManagementSystem.Repositories.Interfaces;

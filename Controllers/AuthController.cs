@@ -1,4 +1,5 @@
 using CouponManagementSystem.DTO;
+using CouponManagementSystem.DTO.Auth;
 using CouponManagementSystem.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 

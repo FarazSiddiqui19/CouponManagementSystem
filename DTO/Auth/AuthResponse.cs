@@ -1,8 +1,6 @@
 namespace CouponManagementSystem.DTO.Auth;
 
-public record AuthResponse(
-    string Token,
-    Guid UserId,
-    string Name,
-    string Email
-);
+public class AuthResponse
+{
+    public string token { get; set; } = string.Empty;
+}

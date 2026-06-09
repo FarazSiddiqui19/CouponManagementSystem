@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace CouponManagementSystem.DTO;
+namespace CouponManagementSystem.DTO.Coupon;
 
 public class UpdateCouponRequest
 {

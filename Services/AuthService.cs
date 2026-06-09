@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using CouponManagementSystem.Data;
 using CouponManagementSystem.DTO;
+using CouponManagementSystem.DTO.Auth;
 using CouponManagementSystem.Entities;
 using CouponManagementSystem.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;

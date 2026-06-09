@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using CouponManagementSystem.DTO;
+using CouponManagementSystem.DTO.Claim;
 using CouponManagementSystem.Models;
 using CouponManagementSystem.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;

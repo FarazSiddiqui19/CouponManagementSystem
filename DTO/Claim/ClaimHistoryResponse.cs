@@ -1,4 +1,4 @@
-namespace CouponManagementSystem.DTO;
+namespace CouponManagementSystem.DTO.Claim;
 
 public class ClaimHistoryResponse
 {

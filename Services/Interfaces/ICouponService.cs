@@ -1,5 +1,6 @@
 using CouponManagementSystem.Data.Models;
 using CouponManagementSystem.DTO;
+using CouponManagementSystem.DTO.Coupon;
 using CouponManagementSystem.Models;
 
 namespace CouponManagementSystem.Services.Interfaces;

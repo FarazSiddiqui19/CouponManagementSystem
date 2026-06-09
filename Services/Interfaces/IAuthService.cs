@@ -1,4 +1,5 @@
 using CouponManagementSystem.DTO;
+using CouponManagementSystem.DTO.Auth;
 
 namespace CouponManagementSystem.Services.Interfaces;
 

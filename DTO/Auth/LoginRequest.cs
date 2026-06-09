@@ -1,6 +1,12 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace CouponManagementSystem.DTO.Auth;
 
-public record LoginRequest(
-    string Email,
-    string Password
-);
+public class LoginRequest
+{
+    [Required, EmailAddress]
+    public string email { get; set; } = string.Empty;
+
+    [Required]
+    public string password { get; set; } = string.Empty;
+}
